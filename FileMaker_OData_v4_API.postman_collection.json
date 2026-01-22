@@ -1,0 +1,1658 @@
+{
+	"info": {
+		"_postman_id": "filemaker-odata-v4-community",
+		"name": "FileMaker OData v4 API",
+		"description": "# FileMaker OData v4 API Collection\n\nA comprehensive Postman collection for working with FileMaker Server's OData v4 API.\n\n## Author\n\n**Doug Hauenstein**  \nFM Rug Software  \n🌐 [fmrug.com](https://fmrug.com) | [nectomax.com](https://nectomax.com)\n\n---\n\n## Overview\n\nFileMaker Server exposes your database via OData v4, allowing external applications to perform CRUD operations, run queries, and interact with related records using standard HTTP requests.\n\nThis collection covers:\n- ✅ Metadata & schema discovery\n- ✅ CRUD operations (Create, Read, Update, Delete)\n- ✅ Query options ($filter, $select, $orderby, $top, $skip, $count, $expand)\n- ✅ Related records & navigation properties\n- ✅ Container field operations (upload/download files)\n- ✅ Batch requests\n- ✅ FileMaker-specific extensions (global fields, script execution)\n\n---\n\n## Quick Start\n\n### 1. Import the Collection\nImport this collection and the accompanying environment file into Postman.\n\n### 2. Configure Environment Variables\nSet these variables in your environment:\n\n| Variable | Description | Example |\n|----------|-------------|----------|\n| `baseUrl` | Your FileMaker Server URL | `https://fm.example.com` |\n| `database` | Database name | `MyDatabase` |\n| `table` | Default table/layout name | `Customers` |\n| `recordId` | Default record ID for testing | `1` |\n| `username` | FileMaker account username | `api_user` |\n| `password` | FileMaker account password | `••••••••` |\n\n### 3. Enable OData on FileMaker Server\nIn FileMaker Server Admin Console:\n1. Go to **Connectors** > **OData**\n2. Enable OData access\n3. Ensure your database is hosted and OData-enabled\n\n### 4. Configure FileMaker Privileges\nYour FileMaker privilege set must have:\n- `fmrest` extended privilege enabled\n- Appropriate record-level access for the layouts you're exposing\n\n---\n\n## Important Notes\n\n### JSON Escaping for POST/PATCH\nWhen sending JSON via code or scripts, FileMaker OData v4 requires escaped quotes (`\\\"`) within string values. Postman handles this automatically, but keep it in mind for programmatic access.\n\n### Field Names Are Case-Sensitive\nOData field names must match your FileMaker field names exactly, including capitalization.\n\n### Layouts Define Your Schema\nOData exposes layouts, not tables directly. The fields available via OData are determined by which fields are on your layout.\n\n---\n\n## Resources\n\n- [Claris OData Documentation](https://help.claris.com/en/odata-guide/)\n- [OData v4 Specification](https://www.odata.org/documentation/)\n- [FM Rug Software](https://fmrug.com)\n\n---\n\n## License\n\nThis collection is provided free for the FileMaker community. Use it, modify it, share it.\n\n**Contributions welcome!** If you find issues or have improvements, please submit a PR or reach out.\n\n---\n\n*Last updated: January 2025*",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "{{username}}",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "{{password}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://your-filemaker-server.com",
+			"type": "string"
+		},
+		{
+			"key": "database",
+			"value": "YourDatabase",
+			"type": "string"
+		},
+		{
+			"key": "table",
+			"value": "Customers",
+			"type": "string"
+		},
+		{
+			"key": "recordId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔍 Metadata & Discovery",
+			"item": [
+				{
+					"name": "Get Service Document",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}"]
+						},
+						"description": "Returns the service document listing all available entity sets (tables/layouts) exposed via OData.\n\nThis is your starting point for discovering what's available in the database."
+					},
+					"response": [
+						{
+							"name": "Service Document - Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; odata.metadata=minimal"
+								}
+							],
+							"body": "{\n    \"@odata.context\": \"https://fm.example.com/fmi/odata/v4/MyDatabase/$metadata\",\n    \"value\": [\n        {\n            \"name\": \"Customers\",\n            \"kind\": \"EntitySet\",\n            \"url\": \"Customers\"\n        },\n        {\n            \"name\": \"Orders\",\n            \"kind\": \"EntitySet\",\n            \"url\": \"Orders\"\n        },\n        {\n            \"name\": \"Products\",\n            \"kind\": \"EntitySet\",\n            \"url\": \"Products\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Metadata (XML)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/xml"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/$metadata",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "$metadata"]
+						},
+						"description": "Returns the full OData metadata document (EDMX/CSDL) in XML format.\n\nThis describes:\n- All entity types (tables)\n- Properties (fields) and their data types\n- Navigation properties (relationships)\n- Keys and constraints\n\n**Tip:** Use this to understand your schema before building queries."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Metadata (JSON)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/$metadata?$format=json",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "$metadata"],
+							"query": [
+								{
+									"key": "$format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "Returns metadata in JSON format (CSDL JSON) instead of XML.\n\nEasier to parse programmatically if you're building dynamic integrations."
+					},
+					"response": []
+				}
+			],
+			"description": "Discover available tables, fields, relationships, and data types in your FileMaker database.\n\nStart here to understand your schema before building queries."
+		},
+		{
+			"name": "📄 CRUD Operations",
+			"item": [
+				{
+					"name": "GET All Records",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+						},
+						"description": "Retrieves all records from the specified table/layout.\n\n**⚠️ Warning:** Without `$top`, this returns ALL records. Use query options to filter and paginate for large datasets."
+					},
+					"response": [
+						{
+							"name": "GET All - Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; odata.metadata=minimal"
+								}
+							],
+							"body": "{\n    \"@odata.context\": \"https://fm.example.com/fmi/odata/v4/MyDatabase/$metadata#Customers\",\n    \"value\": [\n        {\n            \"PrimaryKey\": 1,\n            \"FirstName\": \"John\",\n            \"LastName\": \"Smith\",\n            \"Email\": \"john.smith@example.com\",\n            \"CreatedDate\": \"2025-01-15\"\n        },\n        {\n            \"PrimaryKey\": 2,\n            \"FirstName\": \"Jane\",\n            \"LastName\": \"Doe\",\n            \"Email\": \"jane.doe@example.com\",\n            \"CreatedDate\": \"2025-01-16\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "GET Single Record",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})"]
+						},
+						"description": "Retrieves a single record by its primary key.\n\nThe key field is determined by your FileMaker schema—typically the Record ID or a custom primary key field."
+					},
+					"response": [
+						{
+							"name": "GET Single - Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}(1)",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}(1)"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; odata.metadata=minimal"
+								}
+							],
+							"body": "{\n    \"@odata.context\": \"https://fm.example.com/fmi/odata/v4/MyDatabase/$metadata#Customers/$entity\",\n    \"PrimaryKey\": 1,\n    \"FirstName\": \"John\",\n    \"LastName\": \"Smith\",\n    \"Email\": \"john.smith@example.com\",\n    \"Phone\": \"555-123-4567\",\n    \"Status\": \"Active\",\n    \"CreatedDate\": \"2025-01-15\",\n    \"ModifiedDate\": \"2025-01-20\"\n}"
+						},
+						{
+							"name": "GET Single - Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}(999999)",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}(999999)"]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"error\": {\n        \"code\": \"404\",\n        \"message\": \"Record not found\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "POST Create Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"FirstName\": \"Alice\",\n    \"LastName\": \"Johnson\",\n    \"Email\": \"alice.johnson@example.com\",\n    \"Phone\": \"555-987-6543\",\n    \"Status\": \"Active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+						},
+						"description": "Creates a new record in the specified table.\n\n**Returns:** The created record with its assigned primary key.\n\n---\n\n### ⚠️ Important: JSON Escaping\n\nWhen sending POST/PATCH requests programmatically (via scripts, webhooks, etc.), FileMaker OData v4 requires escaped quotes within string values:\n\n```json\n// In Postman (automatic escaping)\n{ \"Notes\": \"Customer said \\\"call back later\\\"\" }\n\n// In code (manual escaping required)\n\"{ \\\"Notes\\\": \\\"Customer said \\\\\\\"call back later\\\\\\\"\\\" }\"\n```\n\nPostman handles this automatically, but keep it in mind for Pipedream, n8n, or custom integrations."
+					},
+					"response": [
+						{
+							"name": "POST Create - Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"FirstName\": \"Alice\",\n    \"LastName\": \"Johnson\",\n    \"Email\": \"alice.johnson@example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; odata.metadata=minimal"
+								},
+								{
+									"key": "Location",
+									"value": "https://fm.example.com/fmi/odata/v4/MyDatabase/Customers(42)"
+								}
+							],
+							"body": "{\n    \"@odata.context\": \"https://fm.example.com/fmi/odata/v4/MyDatabase/$metadata#Customers/$entity\",\n    \"PrimaryKey\": 42,\n    \"FirstName\": \"Alice\",\n    \"LastName\": \"Johnson\",\n    \"Email\": \"alice.johnson@example.com\",\n    \"Status\": \"Active\",\n    \"CreatedDate\": \"2025-01-22\"\n}"
+						}
+					]
+				},
+				{
+					"name": "PATCH Update Record",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"Status\": \"Inactive\",\n    \"Notes\": \"Account closed per customer request\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})"]
+						},
+						"description": "Updates an existing record.\n\n**Partial Update:** Only include the fields you want to modify. Omitted fields remain unchanged.\n\n**Returns:** The updated record."
+					},
+					"response": [
+						{
+							"name": "PATCH Update - Success",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"Status\": \"Inactive\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}(1)",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}(1)"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; odata.metadata=minimal"
+								}
+							],
+							"body": "{\n    \"@odata.context\": \"https://fm.example.com/fmi/odata/v4/MyDatabase/$metadata#Customers/$entity\",\n    \"PrimaryKey\": 1,\n    \"FirstName\": \"John\",\n    \"LastName\": \"Smith\",\n    \"Email\": \"john.smith@example.com\",\n    \"Status\": \"Inactive\",\n    \"ModifiedDate\": \"2025-01-22\"\n}"
+						}
+					]
+				},
+				{
+					"name": "DELETE Record",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})"]
+						},
+						"description": "Deletes the specified record.\n\n**Returns:** `204 No Content` on success (empty response body).\n\n**⚠️ Warning:** This is a permanent deletion. Consider using a soft-delete pattern (Status field) for production data."
+					},
+					"response": [
+						{
+							"name": "DELETE - Success",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}(1)",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}(1)"]
+								}
+							},
+							"status": "No Content",
+							"code": 204,
+							"_postman_previewlanguage": "text",
+							"header": [],
+							"body": ""
+						}
+					]
+				}
+			],
+			"description": "Standard Create, Read, Update, Delete operations for FileMaker records via OData."
+		},
+		{
+			"name": "🔎 Query Options",
+			"item": [
+				{
+					"name": "$select",
+					"item": [
+						{
+							"name": "$select - Specific Fields",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$select=FirstName,LastName,Email",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$select",
+											"value": "FirstName,LastName,Email"
+										}
+									]
+								},
+								"description": "Returns only the specified fields.\n\n**Benefits:**\n- Reduces payload size\n- Improves performance\n- Limits data exposure\n\n**Syntax:** Comma-separated field names, no spaces."
+							},
+							"response": []
+						}
+					],
+					"description": "Control which fields are returned in the response."
+				},
+				{
+					"name": "$filter",
+					"item": [
+						{
+							"name": "$filter - Equals",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=Status eq 'Active'",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Status eq 'Active'"
+										}
+									]
+								},
+								"description": "Filters records where Status equals 'Active'.\n\n**String values** must be wrapped in single quotes.\n**Numeric values** do not use quotes."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - Not Equals",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=Status ne 'Deleted'",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Status ne 'Deleted'"
+										}
+									]
+								},
+								"description": "Filters records where Status is NOT 'Deleted'."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - Greater Than",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=TotalAmount gt 1000",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "TotalAmount gt 1000"
+										}
+									]
+								},
+								"description": "Filters records where TotalAmount is greater than 1000.\n\n**Comparison Operators:**\n| Operator | Meaning |\n|----------|----------|\n| `eq` | Equal |\n| `ne` | Not equal |\n| `gt` | Greater than |\n| `ge` | Greater than or equal |\n| `lt` | Less than |\n| `le` | Less than or equal |"
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - Date Comparison",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=CreatedDate ge 2025-01-01",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "CreatedDate ge 2025-01-01"
+										}
+									]
+								},
+								"description": "Filters records created on or after January 1, 2025.\n\n**Date Format:** ISO 8601 (`YYYY-MM-DD`)\n\n**DateTime Format:** `YYYY-MM-DDTHH:MM:SS` (e.g., `2025-01-15T14:30:00`)"
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - Date Range",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=CreatedDate ge 2025-01-01 and CreatedDate le 2025-01-31",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "CreatedDate ge 2025-01-01 and CreatedDate le 2025-01-31"
+										}
+									]
+								},
+								"description": "Filters records created in January 2025.\n\nCombines two conditions with `and` to create a date range."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - AND Logic",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=Status eq 'Active' and TotalAmount gt 500",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Status eq 'Active' and TotalAmount gt 500"
+										}
+									]
+								},
+								"description": "Combines multiple conditions—ALL must be true.\n\nReturns active customers with orders over $500."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - OR Logic",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=Status eq 'Active' or Status eq 'Pending'",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Status eq 'Active' or Status eq 'Pending'"
+										}
+									]
+								},
+								"description": "Combines conditions—ANY can be true.\n\nReturns records that are either Active or Pending."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - contains()",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=contains(LastName,'Smith')",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "contains(LastName,'Smith')"
+										}
+									]
+								},
+								"description": "Filters records where LastName contains 'Smith'.\n\nMatches: Smith, Smithson, Blacksmith\n\n**Note:** Case-sensitive by default in FileMaker."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - startswith()",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=startswith(LastName,'A')",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "startswith(LastName,'A')"
+										}
+									]
+								},
+								"description": "Filters records where LastName starts with 'A'.\n\nUseful for alphabetical browsing or autocomplete features."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - endswith()",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=endswith(Email,'@gmail.com')",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "endswith(Email,'@gmail.com')"
+										}
+									]
+								},
+								"description": "Filters records where Email ends with '@gmail.com'.\n\nUseful for filtering by domain or file extension."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - NULL Check",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=Email eq null",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Email eq null"
+										}
+									]
+								},
+								"description": "Filters records where Email is empty/null.\n\nUseful for finding incomplete records."
+							},
+							"response": []
+						},
+						{
+							"name": "$filter - NOT NULL Check",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=Email ne null",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Email ne null"
+										}
+									]
+								},
+								"description": "Filters records where Email has a value (is not empty)."
+							},
+							"response": []
+						}
+					],
+					"description": "Filter records using comparison operators and string functions.\n\n**Operators:** eq, ne, gt, ge, lt, le, and, or, not\n\n**Functions:** contains(), startswith(), endswith()"
+				},
+				{
+					"name": "$orderby",
+					"item": [
+						{
+							"name": "$orderby - Ascending",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$orderby=LastName asc",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$orderby",
+											"value": "LastName asc"
+										}
+									]
+								},
+								"description": "Sorts results by LastName A-Z.\n\n`asc` is optional—ascending is the default."
+							},
+							"response": []
+						},
+						{
+							"name": "$orderby - Descending",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$orderby=CreatedDate desc",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$orderby",
+											"value": "CreatedDate desc"
+										}
+									]
+								},
+								"description": "Sorts results by CreatedDate newest first."
+							},
+							"response": []
+						},
+						{
+							"name": "$orderby - Multiple Fields",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$orderby=LastName asc,FirstName asc",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$orderby",
+											"value": "LastName asc,FirstName asc"
+										}
+									]
+								},
+								"description": "Sorts by LastName first, then FirstName within each LastName.\n\nUseful for alphabetical name lists."
+							},
+							"response": []
+						}
+					],
+					"description": "Sort results by one or more fields in ascending or descending order."
+				},
+				{
+					"name": "$top & $skip",
+					"item": [
+						{
+							"name": "$top - Limit Results",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$top=10",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$top",
+											"value": "10"
+										}
+									]
+								},
+								"description": "Returns only the first 10 records.\n\n**Best Practice:** Always use $top with large datasets to avoid performance issues."
+							},
+							"response": []
+						},
+						{
+							"name": "$skip - Offset Results",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$skip=20",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$skip",
+											"value": "20"
+										}
+									]
+								},
+								"description": "Skips the first 20 records.\n\nTypically combined with $top for pagination."
+							},
+							"response": []
+						},
+						{
+							"name": "Pagination Example (Page 3)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$top=25&$skip=50&$orderby=CreatedDate desc&$count=true",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$top",
+											"value": "25"
+										},
+										{
+											"key": "$skip",
+											"value": "50"
+										},
+										{
+											"key": "$orderby",
+											"value": "CreatedDate desc"
+										},
+										{
+											"key": "$count",
+											"value": "true"
+										}
+									]
+								},
+								"description": "Page 3 of a paginated result set (25 records per page).\n\n**Pagination Formula:**\n```\n$skip = (pageNumber - 1) × pageSize\n```\n\nPage 1: $skip=0, $top=25\nPage 2: $skip=25, $top=25\nPage 3: $skip=50, $top=25"
+							},
+							"response": []
+						}
+					],
+					"description": "Limit and offset results for pagination."
+				},
+				{
+					"name": "$count",
+					"item": [
+						{
+							"name": "$count=true - Include Count",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$count=true&$top=10",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+									"query": [
+										{
+											"key": "$count",
+											"value": "true"
+										},
+										{
+											"key": "$top",
+											"value": "10"
+										}
+									]
+								},
+								"description": "Includes `@odata.count` in the response with total matching records.\n\nEssential for pagination UI—shows \"Page 1 of 10\" or \"Showing 1-25 of 237 results\"."
+							},
+							"response": [
+								{
+									"name": "$count Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$count=true&$top=10",
+											"host": ["{{baseUrl}}"],
+											"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+											"query": [
+												{
+													"key": "$count",
+													"value": "true"
+												},
+												{
+													"key": "$top",
+													"value": "10"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"body": "{\n    \"@odata.context\": \"...\",\n    \"@odata.count\": 237,\n    \"value\": [\n        { \"...first 10 records...\" }\n    ]\n}"
+								}
+							]
+						},
+						{
+							"name": "$count - Count Only",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "text/plain"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}/$count",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}", "$count"]
+								},
+								"description": "Returns ONLY the count as a plain integer—no record data.\n\nFastest way to get a record count."
+							},
+							"response": [
+								{
+									"name": "$count Only Response",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "text/plain"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}/$count",
+											"host": ["{{baseUrl}}"],
+											"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}", "$count"]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "text",
+									"body": "237"
+								}
+							]
+						},
+						{
+							"name": "$count with $filter",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "text/plain"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}/$count?$filter=Status eq 'Active'",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}", "$count"],
+									"query": [
+										{
+											"key": "$filter",
+											"value": "Status eq 'Active'"
+										}
+									]
+								},
+								"description": "Counts only records matching the filter.\n\nUseful for dashboards: \"42 active customers\""
+							},
+							"response": []
+						}
+					],
+					"description": "Get record counts for pagination and dashboards."
+				},
+				{
+					"name": "Combined Query - Full Example",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$select=CustomerID,FirstName,LastName,Email,TotalOrders&$filter=Status eq 'Active' and TotalOrders gt 5&$orderby=TotalOrders desc&$top=20&$count=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$select",
+									"value": "CustomerID,FirstName,LastName,Email,TotalOrders"
+								},
+								{
+									"key": "$filter",
+									"value": "Status eq 'Active' and TotalOrders gt 5"
+								},
+								{
+									"key": "$orderby",
+									"value": "TotalOrders desc"
+								},
+								{
+									"key": "$top",
+									"value": "20"
+								},
+								{
+									"key": "$count",
+									"value": "true"
+								}
+							]
+						},
+						"description": "A comprehensive query combining all options:\n\n1. **$select** - Return only specific fields\n2. **$filter** - Active customers with 5+ orders\n3. **$orderby** - Best customers first\n4. **$top** - Limit to top 20\n5. **$count** - Include total for pagination\n\nThis is how you'd build a \"Top Customers\" dashboard widget."
+					},
+					"response": []
+				}
+			],
+			"description": "OData query options for filtering, sorting, selecting fields, and pagination.\n\nThese are the building blocks for efficient data retrieval."
+		},
+		{
+			"name": "🔗 Related Records",
+			"item": [
+				{
+					"name": "$expand - Include Related Records",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$expand=Orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$expand",
+									"value": "Orders"
+								}
+							]
+						},
+						"description": "Includes related records (from a portal or related table) in the response.\n\nThe relationship name must match the **navigation property** name from `$metadata`.\n\n**FileMaker Note:** Navigation properties are created from your relationships graph. The name is typically the related table occurrence name."
+					},
+					"response": [
+						{
+							"name": "$expand Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/Customers?$expand=Orders&$top=1",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "Customers"],
+									"query": [
+										{
+											"key": "$expand",
+											"value": "Orders"
+										},
+										{
+											"key": "$top",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"@odata.context\": \"...\",\n    \"value\": [\n        {\n            \"CustomerID\": 1,\n            \"FirstName\": \"John\",\n            \"LastName\": \"Smith\",\n            \"Orders\": [\n                {\n                    \"OrderID\": 101,\n                    \"OrderDate\": \"2025-01-10\",\n                    \"Total\": 250.00\n                },\n                {\n                    \"OrderID\": 115,\n                    \"OrderDate\": \"2025-01-18\",\n                    \"Total\": 175.50\n                }\n            ]\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "$expand with Nested $select",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$expand=Orders($select=OrderID,OrderDate,Total)",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$expand",
+									"value": "Orders($select=OrderID,OrderDate,Total)"
+								}
+							]
+						},
+						"description": "Expands related records but returns only specific fields from the related table.\n\nReduces payload size when you don't need all related fields."
+					},
+					"response": []
+				},
+				{
+					"name": "$expand with Nested $filter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$expand=Orders($filter=Total gt 100)",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$expand",
+									"value": "Orders($filter=Total gt 100)"
+								}
+							]
+						},
+						"description": "Expands related records with a filter applied.\n\nReturns customers with their orders, but only orders over $100."
+					},
+					"response": []
+				},
+				{
+					"name": "$expand with Nested $orderby",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$expand=Orders($orderby=OrderDate desc;$top=5)",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$expand",
+									"value": "Orders($orderby=OrderDate desc;$top=5)"
+								}
+							]
+						},
+						"description": "Expands related records with sorting and limit.\n\nReturns customers with their 5 most recent orders.\n\n**Note:** Nested options use semicolons (`;`) to separate, not ampersands."
+					},
+					"response": []
+				},
+				{
+					"name": "$expand - Multiple Related Tables",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$expand=Orders,Contacts,Notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$expand",
+									"value": "Orders,Contacts,Notes"
+								}
+							]
+						},
+						"description": "Expands multiple related tables in a single request.\n\n**Performance Note:** Each additional expansion adds to response time. Only expand what you need."
+					},
+					"response": []
+				},
+				{
+					"name": "Navigate to Related Records Directly",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/Customers({{recordId}})/Orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "Customers({{recordId}})", "Orders"]
+						},
+						"description": "Directly access related records for a specific parent record.\n\nEquivalent to: \"Give me all Orders for Customer #1\"\n\nYou can apply query options to the related records:\n`/Customers(1)/Orders?$filter=Total gt 100&$orderby=OrderDate desc`"
+					},
+					"response": []
+				}
+			],
+			"description": "Work with related records using `$expand` and navigation properties.\n\nFileMaker relationships are exposed as OData navigation properties."
+		},
+		{
+			"name": "📎 Container Fields",
+			"item": [
+				{
+					"name": "GET - Download File",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "*/*"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})/Photo/$value",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})", "Photo", "$value"]
+						},
+						"description": "Downloads the binary content of a container field.\n\nReplace `Photo` with your container field name.\n\n**Returns:** The file with appropriate `Content-Type` header (image/jpeg, application/pdf, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Upload File",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/octet-stream"
+							},
+							{
+								"key": "Content-Disposition",
+								"value": "attachment; filename=\"document.pdf\""
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})/Document/$value",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})", "Document", "$value"]
+						},
+						"description": "Uploads a file to a container field.\n\n**Steps:**\n1. Replace `Document` with your container field name\n2. Set `Content-Disposition` header with desired filename\n3. In Body tab, select \"binary\" and choose your file\n\n**Supported Types:** Any file type FileMaker supports (images, PDFs, documents, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Clear Container",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})/Photo/$value",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})", "Photo", "$value"]
+						},
+						"description": "Removes the content from a container field (clears it).\n\n**Returns:** `204 No Content` on success."
+					},
+					"response": []
+				}
+			],
+			"description": "Upload, download, and manage files in FileMaker container fields."
+		},
+		{
+			"name": "📦 Batch Operations",
+			"item": [
+				{
+					"name": "POST - Batch Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requests\": [\n        {\n            \"id\": \"1\",\n            \"method\": \"GET\",\n            \"url\": \"Customers?$top=5&$select=CustomerID,FirstName,LastName\"\n        },\n        {\n            \"id\": \"2\",\n            \"method\": \"GET\",\n            \"url\": \"Orders?$filter=Status eq 'Pending'&$count=true\"\n        },\n        {\n            \"id\": \"3\",\n            \"method\": \"POST\",\n            \"url\": \"AuditLog\",\n            \"headers\": {\n                \"Content-Type\": \"application/json\"\n            },\n            \"body\": {\n                \"Action\": \"BatchQuery\",\n                \"Timestamp\": \"2025-01-22T10:30:00\"\n            }\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/$batch",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "$batch"]
+						},
+						"description": "Execute multiple operations in a single HTTP request.\n\n**Use Cases:**\n- Dashboard loading (multiple queries at once)\n- Reduce round trips for related operations\n- Atomic operations (all succeed or all fail)\n\n**Note:** Each operation in the batch is identified by `id` for matching responses. FileMaker OData batch support may vary by version."
+					},
+					"response": []
+				}
+			],
+			"description": "Execute multiple operations in a single HTTP request.\n\nReduces network round trips and can provide transactional behavior."
+		},
+		{
+			"name": "⚙️ FileMaker Extensions",
+			"item": [
+				{
+					"name": "Set Global Fields",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"globalFields\": {\n        \"Globals::g_CurrentUser\": \"api_user\",\n        \"Globals::g_SessionID\": \"abc123\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}({{recordId}})",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}({{recordId}})"]
+						},
+						"description": "Sets global field values via OData.\n\n**Syntax:** Global fields must use full `TableOccurrence::FieldName` notation.\n\n**Note:** This is a FileMaker-specific extension to standard OData. Global values persist for the session."
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Script (via Header)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "X-FM-Script-Name",
+								"value": "API_AfterQuery"
+							},
+							{
+								"key": "X-FM-Script-Param",
+								"value": "{\"source\":\"odata\",\"action\":\"query\"}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+						},
+						"description": "Executes a FileMaker script after the OData operation completes.\n\n**Headers:**\n- `X-FM-Script-Name`: Script name to execute\n- `X-FM-Script-Param`: Optional parameter (can be JSON)\n\n**Use Cases:**\n- Logging/auditing\n- Post-processing triggers\n- Complex business logic\n\n**Note:** Script runs with the privileges of the authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Pre-Request Script",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "X-FM-Script-Name-PreRequest",
+								"value": "API_BeforeQuery"
+							},
+							{
+								"key": "X-FM-Script-Param-PreRequest",
+								"value": "setup"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+						},
+						"description": "Executes a FileMaker script BEFORE the OData operation.\n\n**Use Cases:**\n- Set up context (global fields, variables)\n- Validate permissions\n- Initialize session data"
+					},
+					"response": []
+				}
+			],
+			"description": "FileMaker-specific OData extensions for global fields and script execution.\n\nThese features go beyond standard OData to leverage FileMaker's capabilities."
+		},
+		{
+			"name": "❌ Error Examples",
+			"item": [
+				{
+					"name": "401 - Authentication Failed",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "wrong_user",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "wrong_password",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+						},
+						"description": "Example of authentication failure.\n\n**Common Causes:**\n- Wrong username/password\n- Account doesn't have `fmrest` privilege\n- Account is locked or disabled"
+					},
+					"response": [
+						{
+							"name": "401 Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"error\": {\n        \"code\": \"401\",\n        \"message\": \"Authentication failed\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "404 - Record Not Found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}(999999999)",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}(999999999)"]
+						},
+						"description": "Example of requesting a non-existent record.\n\n**Note:** Also returned if the record exists but the user doesn't have permission to view it."
+					},
+					"response": []
+				},
+				{
+					"name": "400 - Invalid Filter Syntax",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/fmi/odata/v4/{{database}}/{{table}}?$filter=InvalidField equals 'test'",
+							"host": ["{{baseUrl}}"],
+							"path": ["fmi", "odata", "v4", "{{database}}", "{{table}}"],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "InvalidField equals 'test'"
+								}
+							]
+						},
+						"description": "Example of invalid query syntax.\n\n**Common Mistakes:**\n- Using `equals` instead of `eq`\n- Missing quotes around string values\n- Invalid field names (case-sensitive!)\n- Malformed date formats"
+					},
+					"response": []
+				}
+			],
+			"description": "Example requests that demonstrate error responses.\n\nUseful for understanding error handling in your integrations."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script runs before every request",
+					"// Logs the request for debugging",
+					"console.log('🚀 Request:', pm.request.method, pm.request.url.toString());",
+					"",
+					"// You can add timestamps or other dynamic data here",
+					"// pm.environment.set('timestamp', new Date().toISOString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Test script runs after every request",
+					"",
+					"// Basic success test",
+					"pm.test('Response is successful', function() {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"// Performance test",
+					"pm.test('Response time < 5 seconds', function() {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"// Log errors for debugging",
+					"if (pm.response.code >= 400) {",
+					"    console.error('❌ Error Response:', pm.response.code, pm.response.text());",
+					"}"
+				]
+			}
+		}
+	]
+}
